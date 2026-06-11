@@ -1,0 +1,367 @@
+{
+  "info": {
+    "_postman_id": "comics-api-collection-2026",
+    "name": "Comics API Collection",
+    "description": "Complete API collection for Comics Backend with Spring Boot and MongoDB",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      },
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Get All Comics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics?page=0&size=20",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "20"
+            }
+          ]
+        },
+        "description": "Get all comics with pagination support"
+      },
+      "response": []
+    },
+    {
+      "name": "Search Comics by Title (Partial Match)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/search?title=avenger",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "title",
+              "value": "avenger"
+            }
+          ]
+        },
+        "description": "Search comics by partial title (case-insensitive)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Comic by Title (First Match)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/title/Avengers",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "title",
+            "Avengers"
+          ]
+        },
+        "description": "Get first comic with exact title"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Comic by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/691b237f14d26e26f8c9181d",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "691b237f14d26e26f8c9181d"
+          ]
+        },
+        "description": "Get a specific comic by its ID"
+      },
+      "response": []
+    },
+    {
+      "name": "Create New Comic",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Spider-Man\",\n  \"number\": 1,\n  \"publisher\": \"Marvel\",\n  \"price\": 3.99,\n  \"description\": \"The Amazing Spider-Man is an American comic book series published by Marvel Comics.\",\n  \"stock\": 50\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics"
+          ]
+        },
+        "description": "Create a new comic with provided information"
+      },
+      "response": []
+    },
+    {
+      "name": "Create Comic - Batman",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Batman\",\n  \"number\": 1,\n  \"publisher\": \"DC Comics\",\n  \"price\": 3.99,\n  \"description\": \"The Dark Knight protects Gotham City.\",\n  \"stock\": 75\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics"
+          ]
+        },
+        "description": "Create a new Batman comic"
+      },
+      "response": []
+    },
+    {
+      "name": "Create Comic - X-Men",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"X-Men\",\n  \"number\": 1,\n  \"publisher\": \"Marvel\",\n  \"price\": 4.99,\n  \"description\": \"Mutants with extraordinary powers fighting for a better world.\",\n  \"stock\": 100\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics"
+          ]
+        },
+        "description": "Create a new X-Men comic"
+      },
+      "response": []
+    },
+    {
+      "name": "Update Comic",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Spider-Man Enhanced\",\n  \"number\": 2,\n  \"publisher\": \"Marvel\",\n  \"price\": 4.99,\n  \"description\": \"Updated description for Spider-Man\",\n  \"stock\": 60\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/691b237f14d26e26f8c9181d",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "691b237f14d26e26f8c9181d"
+          ]
+        },
+        "description": "Update an existing comic's information"
+      },
+      "response": []
+    },
+    {
+      "name": "Update Comic Stock",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/691b237f14d26e26f8c9181d/stock?stock=100",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "691b237f14d26e26f8c9181d",
+            "stock"
+          ],
+          "query": [
+            {
+              "key": "stock",
+              "value": "100"
+            }
+          ]
+        },
+        "description": "Update the stock quantity for a comic"
+      },
+      "response": []
+    },
+    {
+      "name": "Deactivate Comic",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/691b237f14d26e26f8c9181d/deactivate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "691b237f14d26e26f8c9181d",
+            "deactivate"
+          ]
+        },
+        "description": "Deactivate a comic (soft delete)"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Comic",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/comics/691b237f14d26e26f8c9181d",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "comics",
+            "691b237f14d26e26f8c9181d"
+          ]
+        },
+        "description": "Delete a comic by its ID"
+      },
+      "response": []
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/actuator/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        },
+        "description": "Check the application health status"
+      },
+      "response": []
+    },
+    {
+      "name": "Swagger API Docs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/swagger-ui.html",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "swagger-ui.html"
+          ]
+        },
+        "description": "Access the Swagger UI documentation"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "user",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "e987e9fe-2783-4d2f-b099-f20014540970",
+      "type": "string"
+    }
+  ]
+}

@@ -1,55 +1,48 @@
 package com.comics.backend.models;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * User entity representing a user in the Comics application.
+ * Stores user authentication and profile information.
+ */
 @Document(collection = "users")
-
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
-    private String id; // Mongo genera ObjectId automáticamente
+    private String id;
 
-    @Indexed(unique = true) // Evita duplicados
+    @Indexed(unique = true)
     private String nickname;
-    private String name;
-    private String password;
 
-    @Indexed(unique = true) // Evita duplicados
+    private String name;
+
+    private String password; // Should be hashed with BCrypt
+
+    @Indexed(unique = true)
     private String mail;
 
     private Set<String> roles = new HashSet<>(); // ADMIN, USER, etc.
 
-    public User() {}
+    @CreatedDate
+    private LocalDateTime createdAt;
 
-    public User(String nickname, String name, String password, String mail, Set<String> roles) {
-        this.nickname = nickname;
-        this.name = name;
-        this.password = password;
-        this.mail = mail;
-        this.roles = roles;
-    }
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
-    // Getters y Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public String getNickname() { return nickname; }
-    public void setNickname(String nickname) { this.nickname = nickname; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
-    public String getMail() { return mail; }
-    public void setMail(String mail) { this.mail = mail; }
-
-    public Set<String> getRoles() { return roles; }
-    public void setRoles(Set<String> roles) { this.roles = roles; }
+    private Boolean active = true;
 }

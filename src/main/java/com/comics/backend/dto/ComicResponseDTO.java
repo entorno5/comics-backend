@@ -5,22 +5,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 /**
- * Data Transfer Object for User response.
- * Excludes sensitive information like passwords.
+ * Data Transfer Object for Comic response.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserResponseDTO {
+public class ComicResponseDTO {
     private String id;
-    private String nickname;
-    private String name;
-    private String mail;
-    private Set<String> roles;
+    private String title;
+    private int number;
+    private String publisher;
+    private double price;
+    private String description;
+    private int stock;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
