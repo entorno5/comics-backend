@@ -45,7 +45,10 @@ public class DevSecurityConfig {
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
                         // Allow public access to Swagger/OpenAPI documentation
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources", "/swagger-resources/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
                         
                         // Allow public access to actuator health endpoint
                         .requestMatchers("/actuator/health").permitAll()
