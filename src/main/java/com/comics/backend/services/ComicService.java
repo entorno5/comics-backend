@@ -63,7 +63,7 @@ public class ComicService {
         // Check if comic with same title and number already exists
         if (comicRepository.findByTitleAndNumber(createComicDTO.getTitle(), createComicDTO.getNumber()).isPresent()) {
             log.warn("Comic with title '{}' and number {} already exists", createComicDTO.getTitle(), createComicDTO.getNumber());
-            throw new DuplicateResourceException("Comic", "title", createComicDTO.getTitle());
+            throw new DuplicateResourceException(String.format("Comic with title '%s' and number %d already exists", createComicDTO.getTitle(), createComicDTO.getNumber()));
         }
 
         // Create comic from DTO
@@ -143,7 +143,7 @@ public class ComicService {
         if (StringUtils.isNotBlank(updateDTO.getTitle()) && !updateDTO.getTitle().equals(comic.getTitle())) {
             // Check for duplicate title and number combination
             if (comicRepository.findByTitleAndNumber(updateDTO.getTitle(), updateDTO.getNumber()).isPresent()) {
-                throw new DuplicateResourceException("Comic", "title", updateDTO.getTitle());
+                throw new DuplicateResourceException(String.format("Comic with title '%s' and number %d already exists", updateDTO.getTitle(), updateDTO.getNumber()));
             }
             comic.setTitle(updateDTO.getTitle());
         }
