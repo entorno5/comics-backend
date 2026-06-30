@@ -3,8 +3,6 @@ package com.comics.backend;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
-
 /**
  * Main Spring Boot Application class for the Comics Backend.
  * 
@@ -23,7 +21,6 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
  * Health Check: http://localhost:8080/actuator/health
  */
 @SpringBootApplication
-@EnableMongoAuditing
 @Slf4j
 public class MainApplication {
 

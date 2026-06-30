@@ -1,5 +1,6 @@
 package com.comics.backend.controllers;
 
+import com.comics.backend.dto.ComicPageResponse;
 import com.comics.backend.dto.ComicResponseDTO;
 import com.comics.backend.dto.CreateComicDTO;
 import com.comics.backend.services.ComicService;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,6 +35,7 @@ import java.util.List;
 public class ComicController {
 
     private final ComicService comicService;
+    private final Environment env;
 
     /**
      * Get all comics with pagination
@@ -42,16 +46,21 @@ public class ComicController {
             @ApiResponse(responseCode = "200", description = "Comics retrieved successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Page<ComicResponseDTO>> getComics(
+    public ResponseEntity<ComicPageResponse> getComics(
             @Parameter(description = "Page number (0-indexed)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size")
             @RequestParam(defaultValue = "20") int size) {
-        
+
         log.debug("Getting comics with page: {}, size: {}", page, size);
         Pageable pageable = PageRequest.of(page, size);
         Page<ComicResponseDTO> comics = comicService.getAllComics(pageable);
-        return ResponseEntity.ok(comics);
+        boolean isMock = Arrays.asList(env.getActiveProfiles()).contains("mock");
+        return ResponseEntity.ok(new ComicPageResponse(
+                comics.getContent(),
+                comics.getTotalElements(),
+                comics.getTotalPages(),
+                isMock));
     }
 
     /**
