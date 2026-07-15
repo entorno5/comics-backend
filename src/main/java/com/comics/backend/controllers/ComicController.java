@@ -16,6 +16,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,11 +51,13 @@ public class ComicController {
             @Parameter(description = "Page number (0-indexed)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Filter by title (case-insensitive, partial match)")
+            @RequestParam(required = false) String q) {
 
-        log.debug("Getting comics with page: {}, size: {}", page, size);
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ComicResponseDTO> comics = comicService.getAllComics(pageable);
+        log.debug("Getting comics with page: {}, size: {}, q: {}", page, size, q);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedDate"));
+        Page<ComicResponseDTO> comics = comicService.getAllComics(pageable, q);
         boolean isMock = Arrays.asList(env.getActiveProfiles()).contains("mock");
         return ResponseEntity.ok(new ComicPageResponse(
                 comics.getContent(),

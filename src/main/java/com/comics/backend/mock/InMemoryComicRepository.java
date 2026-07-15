@@ -8,6 +8,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,10 +50,35 @@ public class InMemoryComicRepository implements ComicRepository {
     }
 
     @Override
+    public List<Comic> findByCollectionName(String collectionName) {
+        return store.values().stream()
+                .filter(c -> collectionName.equals(c.getCollectionName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long countByCollectionName(String collectionName) {
+        return store.values().stream()
+                .filter(c -> collectionName.equals(c.getCollectionName()))
+                .count();
+    }
+
+    @Override
     public List<Comic> findByTitleContainsIgnoreCase(String titleSearch) {
         return store.values().stream()
                 .filter(c -> c.getTitle().toLowerCase().contains(titleSearch.toLowerCase()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<Comic> findByTitleContainsIgnoreCasePaged(String titleSearch, Pageable pageable) {
+        List<Comic> filtered = store.values().stream()
+                .filter(c -> c.getTitle().toLowerCase().contains(titleSearch.toLowerCase()))
+                .collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<Comic> content = (start < end) ? filtered.subList(start, end) : Collections.emptyList();
+        return new PageImpl<>(content, pageable, filtered.size());
     }
 
     // ── CrudRepository ────────────────────────────────────────────────────────
@@ -85,7 +111,11 @@ public class InMemoryComicRepository implements ComicRepository {
 
     @Override
     public List<Comic> findAll() {
-        return new ArrayList<>(store.values());
+        return store.values().stream()
+                .sorted(Comparator.comparing(
+                        c -> c.getPublishedDate() != null ? c.getPublishedDate() : LocalDate.MIN,
+                        Comparator.reverseOrder()))
+                .collect(Collectors.toList());
     }
 
     @Override

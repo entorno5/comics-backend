@@ -1,12 +1,21 @@
 package com.comics.backend.config;
 
+import com.comics.backend.security.ComicsUserDetailsService;
+import com.comics.backend.security.JwtAuthFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -16,57 +25,49 @@ import java.util.Collections;
 
 /**
  * Security configuration for the application.
- * Configures HTTP security, CORS, and session management.
- * 
- * NOTE: This configuration allows all requests for development purposes.
- * In production, implement proper authentication and authorization.
+ * Configures HTTP security, CORS, JWT filter, and authentication provider.
  */
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class DevSecurityConfig {
 
-    /**
-     * Security filter chain configuration.
-     * Currently allows all requests for development.
-     * Should be enhanced with JWT/OAuth2 for production.
-     */
+    private final JwtAuthFilter jwtAuthFilter;
+    private final ComicsUserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for stateless API
                 .csrf(csrf -> csrf.disable())
-                
-                // Enable CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                
-                // Set session management to stateless (required for JWT)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                
-                // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        // Allow public access to Swagger/OpenAPI documentation
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-resources", "/swagger-resources/**").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
-                        
-                        // Allow public access to actuator health endpoint
                         .requestMatchers("/actuator/health").permitAll()
-                        
-                        // All other requests require authentication
-                        // In development, allowing all. In production, configure properly.
-                        .anyRequest().permitAll()
-                        
-                        // Uncomment for production-like security:
-                        // .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
-                        // .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
-                        // .requestMatchers(HttpMethod.POST, "/api/v1/**").authenticated()
-                        // .requestMatchers(HttpMethod.PUT, "/api/v1/**").authenticated()
-                        // .requestMatchers(HttpMethod.DELETE, "/api/v1/**").authenticated()
-                        // .anyRequest().authenticated()
-                );
-        
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     /**

@@ -39,6 +39,18 @@ public class ComicService {
     }
 
     /**
+     * Get all comics with pagination and optional title filter
+     */
+    public Page<ComicResponseDTO> getAllComics(Pageable pageable, String q) {
+        if (q == null || q.isBlank()) {
+            return getAllComics(pageable);
+        }
+        log.debug("Fetching comics with filter q='{}' and pagination: {}", q, pageable);
+        return comicRepository.findByTitleContainsIgnoreCasePaged(q.trim(), pageable)
+                .map(entityMapper::toComicResponseDTO);
+    }
+
+    /**
      * Get all comics (without pagination)
      */
     public List<ComicResponseDTO> getAllComics() {

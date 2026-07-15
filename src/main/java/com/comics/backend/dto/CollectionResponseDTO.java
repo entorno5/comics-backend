@@ -4,27 +4,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Data Transfer Object for Comic response.
+ * Data Transfer Object for Collection response.
+ * Includes computed issueCount from associated comics.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ComicResponseDTO {
+public class CollectionResponseDTO {
     private String id;
-    private String title;
-    private String collectionName;
-    private int number;
+    private String name;
     private String publisher;
-    private double price;
-    private String description;
-    private int stock;
-    private Boolean active;
-    private LocalDate publishedDate;
+    private Boolean ongoingCollection;
+    private Boolean wantToComplete;
+    private long issueCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

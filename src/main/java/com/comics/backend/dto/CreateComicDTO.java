@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 
 /**
  * DTO for creating a new comic.
@@ -19,6 +20,9 @@ public class CreateComicDTO {
     @NotBlank(message = "Title is required")
     @Size(min = 2, max = 200, message = "Title must be between 2 and 200 characters")
     private String title;
+
+    @Size(max = 200, message = "Collection name cannot exceed 200 characters")
+    private String collectionName;
 
     @Min(value = 1, message = "Number must be at least 1")
     @Max(value = 999999, message = "Number cannot exceed 999999")
@@ -37,4 +41,6 @@ public class CreateComicDTO {
 
     @Min(value = 0, message = "Stock cannot be negative")
     private int stock;
+
+    private LocalDate publishedDate;
 }

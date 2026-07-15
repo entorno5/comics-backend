@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -30,6 +31,9 @@ public class Comic {
 
     private String title;
 
+    /** Name of the series/collection this issue belongs to (e.g., "Batman"). */
+    private String collectionName;
+
     private int number;
 
     private String publisher;
@@ -39,6 +43,9 @@ public class Comic {
     private String description;
 
     private int stock = 0;
+
+    /** Publication date — used to sort comics from most recent to oldest. */
+    private LocalDate publishedDate;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -53,6 +60,7 @@ public class Comic {
      */
     public Comic(String title, int number, String publisher, double price) {
         this.title = title;
+        this.collectionName = title;
         this.number = number;
         this.publisher = publisher;
         this.price = price;
