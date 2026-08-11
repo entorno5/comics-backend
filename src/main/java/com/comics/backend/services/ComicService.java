@@ -7,6 +7,7 @@ import com.comics.backend.exceptions.ResourceNotFoundException;
 import com.comics.backend.mappers.EntityMapper;
 import com.comics.backend.models.Comic;
 import com.comics.backend.repository.ComicRepository;
+import com.comics.backend.repository.CollectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 public class ComicService {
 
     private final ComicRepository comicRepository;
+    private final CollectionRepository collectionRepository;
     private final EntityMapper entityMapper;
 
     /**
@@ -47,6 +49,24 @@ public class ComicService {
         }
         log.debug("Fetching comics with filter q='{}' and pagination: {}", q, pageable);
         return comicRepository.findByTitleContainsIgnoreCasePaged(q.trim(), pageable)
+                .map(entityMapper::toComicResponseDTO);
+    }
+
+    /**
+     * Get comics with pagination, optional title filter and optional owned filter.
+     * With ownedOnly=true only comics the collector owns are returned (null owned counts as false).
+     */
+    public Page<ComicResponseDTO> getAllComics(Pageable pageable, String q, boolean ownedOnly) {
+        if (!ownedOnly) {
+            return getAllComics(pageable, q);
+        }
+        if (q == null || q.isBlank()) {
+            log.debug("Fetching owned comics with pagination: {}", pageable);
+            return comicRepository.findByOwnedTrue(pageable)
+                    .map(entityMapper::toComicResponseDTO);
+        }
+        log.debug("Fetching owned comics with filter q='{}' and pagination: {}", q, pageable);
+        return comicRepository.findByTitleContainsIgnoreCaseAndOwnedTruePaged(q.trim(), pageable)
                 .map(entityMapper::toComicResponseDTO);
     }
 
@@ -103,8 +123,13 @@ public class ComicService {
                     log.warn("Comic not found with ID: {}", id);
                     return new ResourceNotFoundException("Comic", id);
                 });
-        
-        return entityMapper.toComicResponseDTO(comic);
+
+        ComicResponseDTO dto = entityMapper.toComicResponseDTO(comic);
+        if (comic.getCollectionName() != null) {
+            collectionRepository.findByName(comic.getCollectionName())
+                    .ifPresent(col -> dto.setCollectionId(col.getId()));
+        }
+        return dto;
     }
 
     /**
@@ -179,7 +204,19 @@ public class ComicService {
         if (updateDTO.getStock() >= 0) {
             comic.setStock(updateDTO.getStock());
         }
-        
+
+        if (StringUtils.isNotBlank(updateDTO.getCollectionName())) {
+            comic.setCollectionName(updateDTO.getCollectionName());
+        }
+
+        if (updateDTO.getPublishedDate() != null) {
+            comic.setPublishedDate(updateDTO.getPublishedDate());
+        }
+
+        if (updateDTO.getImageUrl() != null) {
+            comic.setImageUrl(StringUtils.isBlank(updateDTO.getImageUrl()) ? null : updateDTO.getImageUrl());
+        }
+
         Comic updatedComic = comicRepository.save(comic);
         log.info("Comic updated successfully with ID: {}", id);
         
@@ -218,6 +255,27 @@ public class ComicService {
         Comic updatedComic = comicRepository.save(comic);
         
         log.info("Comic deactivated successfully with ID: {}", id);
+        return entityMapper.toComicResponseDTO(updatedComic);
+    }
+
+    /**
+     * Flips the owned flag of a comic.
+     * A null flag is treated as false, so the first toggle always yields true.
+     *
+     * @param id comic identifier
+     * @return the updated comic
+     * @throws ResourceNotFoundException if no comic exists with the given id
+     */
+    public ComicResponseDTO toggleOwned(String id) {
+        log.info("Toggling owned for comic with ID: {}", id);
+
+        Comic comic = comicRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comic", id));
+
+        comic.setOwned(!Boolean.TRUE.equals(comic.getOwned()));
+        Comic updatedComic = comicRepository.save(comic);
+
+        log.info("Comic owned flag updated successfully with ID: {}", id);
         return entityMapper.toComicResponseDTO(updatedComic);
     }
 

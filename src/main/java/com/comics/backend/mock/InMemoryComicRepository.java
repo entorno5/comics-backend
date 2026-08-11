@@ -64,6 +64,32 @@ public class InMemoryComicRepository implements ComicRepository {
     }
 
     @Override
+    public long countByCollectionNameAndOwnedTrue(String collectionName) {
+        return store.values().stream()
+                .filter(c -> collectionName.equals(c.getCollectionName()))
+                .filter(c -> Boolean.TRUE.equals(c.getOwned()))
+                .count();
+    }
+
+    @Override
+    public long countByOwnedTrue() {
+        return store.values().stream()
+                .filter(c -> Boolean.TRUE.equals(c.getOwned()))
+                .count();
+    }
+
+    @Override
+    public Page<Comic> findByOwnedTrue(Pageable pageable) {
+        List<Comic> filtered = findAll().stream()
+                .filter(c -> Boolean.TRUE.equals(c.getOwned()))
+                .collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<Comic> content = (start < end) ? filtered.subList(start, end) : Collections.emptyList();
+        return new PageImpl<>(content, pageable, filtered.size());
+    }
+
+    @Override
     public List<Comic> findByTitleContainsIgnoreCase(String titleSearch) {
         return store.values().stream()
                 .filter(c -> c.getTitle().toLowerCase().contains(titleSearch.toLowerCase()))
@@ -73,6 +99,41 @@ public class InMemoryComicRepository implements ComicRepository {
     @Override
     public Page<Comic> findByTitleContainsIgnoreCasePaged(String titleSearch, Pageable pageable) {
         List<Comic> filtered = store.values().stream()
+                .filter(c -> c.getTitle().toLowerCase().contains(titleSearch.toLowerCase()))
+                .collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<Comic> content = (start < end) ? filtered.subList(start, end) : Collections.emptyList();
+        return new PageImpl<>(content, pageable, filtered.size());
+    }
+
+    @Override
+    public Page<Comic> findByTitleContainsIgnoreCaseAndOwnedTruePaged(String titleSearch, Pageable pageable) {
+        List<Comic> filtered = findAll().stream()
+                .filter(c -> c.getTitle().toLowerCase().contains(titleSearch.toLowerCase()))
+                .filter(c -> Boolean.TRUE.equals(c.getOwned()))
+                .collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<Comic> content = (start < end) ? filtered.subList(start, end) : Collections.emptyList();
+        return new PageImpl<>(content, pageable, filtered.size());
+    }
+
+    @Override
+    public Page<Comic> findByIdIn(java.util.Collection<String> ids, Pageable pageable) {
+        List<Comic> filtered = findAll().stream()
+                .filter(c -> ids.contains(c.getId()))
+                .collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<Comic> content = (start < end) ? filtered.subList(start, end) : Collections.emptyList();
+        return new PageImpl<>(content, pageable, filtered.size());
+    }
+
+    @Override
+    public Page<Comic> findByIdInAndTitleContainsIgnoreCase(java.util.Collection<String> ids, String titleSearch, Pageable pageable) {
+        List<Comic> filtered = findAll().stream()
+                .filter(c -> ids.contains(c.getId()))
                 .filter(c -> c.getTitle().toLowerCase().contains(titleSearch.toLowerCase()))
                 .collect(Collectors.toList());
         int start = (int) pageable.getOffset();

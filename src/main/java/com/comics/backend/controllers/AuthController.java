@@ -35,6 +35,6 @@ public class AuthController {
 
         User user = userRepository.findByNickname(auth.getName()).orElseThrow();
 
-        return ResponseEntity.ok(new AuthResponseDTO(token, user.getNickname(), user.getName()));
+        return ResponseEntity.ok(new AuthResponseDTO(token, user.getNickname(), user.getName(), user.getRoles()));
     }
 }

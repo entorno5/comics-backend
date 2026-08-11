@@ -31,6 +31,9 @@ public class Collection {
 
     private String publisher;
 
+    /** Short summary describing the series. */
+    private String description;
+
     /** True if the series is still being published (new issues coming out). */
     private Boolean ongoingCollection;
 

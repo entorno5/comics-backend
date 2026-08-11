@@ -53,11 +53,13 @@ public class ComicController {
             @Parameter(description = "Page size")
             @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Filter by title (case-insensitive, partial match)")
-            @RequestParam(required = false) String q) {
+            @RequestParam(required = false) String q,
+            @Parameter(description = "When true, return only comics the collector owns")
+            @RequestParam(defaultValue = "false") boolean owned) {
 
-        log.debug("Getting comics with page: {}, size: {}, q: {}", page, size, q);
+        log.debug("Getting comics with page: {}, size: {}, q: {}, owned: {}", page, size, q, owned);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedDate"));
-        Page<ComicResponseDTO> comics = comicService.getAllComics(pageable, q);
+        Page<ComicResponseDTO> comics = comicService.getAllComics(pageable, q, owned);
         boolean isMock = Arrays.asList(env.getActiveProfiles()).contains("mock");
         return ResponseEntity.ok(new ComicPageResponse(
                 comics.getContent(),
@@ -198,6 +200,25 @@ public class ComicController {
         log.info("Deactivating comic with ID: {}", id);
         ComicResponseDTO deactivatedComic = comicService.deactivateComic(id);
         return ResponseEntity.ok(deactivatedComic);
+    }
+
+    /**
+     * Toggle owned flag
+     */
+    @PatchMapping("/{id}/owned")
+    @Operation(summary = "Toggle owned", description = "Flip the owned flag of a comic: true = I own this issue")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comic updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Comic not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<ComicResponseDTO> toggleOwned(
+            @Parameter(description = "Comic ID")
+            @PathVariable String id) {
+
+        log.info("Toggling owned for comic with ID: {}", id);
+        ComicResponseDTO updatedComic = comicService.toggleOwned(id);
+        return ResponseEntity.ok(updatedComic);
     }
 
     /**

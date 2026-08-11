@@ -3,8 +3,10 @@ package com.comics.backend.mock;
 import com.comics.backend.models.Collection;
 import com.comics.backend.models.Comic;
 import com.comics.backend.models.User;
+import com.comics.backend.models.UserComic;
 import com.comics.backend.repository.CollectionRepository;
 import com.comics.backend.repository.ComicRepository;
+import com.comics.backend.repository.UserComicRepository;
 import com.comics.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -23,7 +26,7 @@ import java.util.Set;
  * real-looking data without requiring a MongoDB instance.
  */
 @Component
-@Profile("mock")
+@Profile({"mock", "dev"})
 @RequiredArgsConstructor
 @Slf4j
 public class MockDataInitializer implements ApplicationRunner {
@@ -31,33 +34,38 @@ public class MockDataInitializer implements ApplicationRunner {
     private final ComicRepository comicRepository;
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
+    private final UserComicRepository userComicRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
+        if (comicRepository.count() > 0) {
+            log.debug("Seed data already present, skipping.");
+            return;
+        }
         log.debug("Loading mock seed data...");
 
         // â”€â”€ Collections â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        collectionRepository.save(new Collection("The Amazing Spider-Man", "Marvel", true,  true));
-        collectionRepository.save(new Collection("X-Men",                  "Marvel", true,  true));
-        collectionRepository.save(new Collection("Uncanny X-Men",          "Marvel", true,  false));
-        collectionRepository.save(new Collection("The Avengers",           "Marvel", true,  true));
-        collectionRepository.save(new Collection("Iron Man",               "Marvel", true,  false));
-        collectionRepository.save(new Collection("Thor",                   "Marvel", true,  true));
-        collectionRepository.save(new Collection("Daredevil",              "Marvel", true,  false));
-        collectionRepository.save(new Collection("Black Panther",          "Marvel", true,  false));
-        collectionRepository.save(new Collection("Captain America",        "Marvel", true,  true));
-        collectionRepository.save(new Collection("Hulk",                   "Marvel", true,  false));
-        collectionRepository.save(new Collection("Silver Surfer",          "Marvel", false, true));
-        collectionRepository.save(new Collection("Batman",                 "DC",     true,  true));
-        collectionRepository.save(new Collection("Superman",               "DC",     true,  false));
-        collectionRepository.save(new Collection("Wonder Woman",           "DC",     true,  true));
-        collectionRepository.save(new Collection("Justice League",         "DC",     true,  false));
-        collectionRepository.save(new Collection("Watchmen",               "DC",     false, true));
-        collectionRepository.save(new Collection("Saga",                   "Image",  true,  true));
-        collectionRepository.save(new Collection("Spawn",                  "Image",  true,  false));
-        collectionRepository.save(new Collection("Invincible",             "Image",  false, true));
-        collectionRepository.save(new Collection("Hellboy",                "Dark Horse", false, true));
+        collectionRepository.save(collection("The Amazing Spider-Man", "Marvel", true,  true,  "The flagship wall-crawler series following Peter Parker as he balances student life with superheroics in New York City."));
+        collectionRepository.save(collection("X-Men",                  "Marvel", true,  true,  "Professor Xavier's team of mutants fights to protect a world that hates and fears them."));
+        collectionRepository.save(collection("Uncanny X-Men",          "Marvel", true,  false, "The strangest heroes of all face cosmic threats, from the Dark Phoenix to the Shi'ar Empire."));
+        collectionRepository.save(collection("The Avengers",           "Marvel", true,  true,  "Earth's mightiest heroes united against the threats no single hero could withstand."));
+        collectionRepository.save(collection("Iron Man",               "Marvel", true,  false, "Genius billionaire Tony Stark battles corporate espionage and supervillains in his armored suit."));
+        collectionRepository.save(collection("Thor",                   "Marvel", true,  true,  "The God of Thunder defends both Asgard and Midgard from mythic menaces."));
+        collectionRepository.save(collection("Daredevil",              "Marvel", true,  false, "Blind lawyer Matt Murdock protects Hell's Kitchen as the Man Without Fear."));
+        collectionRepository.save(collection("Black Panther",          "Marvel", true,  false, "T'Challa, king of Wakanda, defends his nation and the world with the power of the panther."));
+        collectionRepository.save(collection("Captain America",        "Marvel", true,  true,  "Steve Rogers, the super-soldier out of time, fights for freedom against HYDRA and beyond."));
+        collectionRepository.save(collection("Hulk",                   "Marvel", true,  false, "Bruce Banner struggles to control the raging green monster unleashed by gamma radiation."));
+        collectionRepository.save(collection("Silver Surfer",          "Marvel", false, true,  "Norrin Radd soars the spaceways as the cosmic herald of Galactus, seeking redemption."));
+        collectionRepository.save(collection("Batman",                 "DC",     true,  true,  "The Dark Knight wages a one-man war on crime in the shadows of Gotham City."));
+        collectionRepository.save(collection("Superman",               "DC",     true,  false, "The Last Son of Krypton protects Metropolis as the world's first and greatest superhero."));
+        collectionRepository.save(collection("Wonder Woman",           "DC",     true,  true,  "Diana of Themyscira, Amazon warrior princess, brings peace to Man's World."));
+        collectionRepository.save(collection("Justice League",         "DC",     true,  false, "DC's greatest heroes join forces against threats too big for any one of them."));
+        collectionRepository.save(collection("Watchmen",               "DC",     false, true,  "A deconstruction of the superhero genre set in an alternate 1985 on the brink of nuclear war."));
+        collectionRepository.save(collection("Saga",                   "Image",  true,  true,  "An epic space opera following two lovers from warring alien races and their newborn daughter."));
+        collectionRepository.save(collection("Spawn",                  "Image",  true,  false, "Al Simmons returns from the dead as a hellspawn warrior caught between Heaven and Hell."));
+        collectionRepository.save(collection("Invincible",             "Image",  false, true,  "Mark Grayson inherits his father's powers and discovers being a hero is complicated."));
+        collectionRepository.save(collection("Hellboy",                "Dark Horse", false, true, "A demon raised by humans investigates the paranormal for the Bureau for Paranormal Research and Defense."));
 
         // â”€â”€ Comics (title = collectionName, ordered by publishedDate inside each series) â”€â”€
 
@@ -163,10 +171,47 @@ public class MockDataInitializer implements ApplicationRunner {
         reader.setPassword(passwordEncoder.encode("Reader123!"));
         reader.setRoles(Set.of("USER"));
         reader.setActive(true);
-        userRepository.save(reader);
+        reader = userRepository.save(reader);
 
-        log.debug("Mock seed data loaded: {} comics, {} collections, 2 users",
+        User collector = new User();
+        collector.setNickname("collector");
+        collector.setName("Comic Collector");
+        collector.setMail("collector@comics.local");
+        collector.setPassword(passwordEncoder.encode("Collector123!"));
+        collector.setRoles(Set.of("USER"));
+        collector.setActive(true);
+        userRepository.save(collector);
+
+        // ── UserComics for reader ─────────────────────────────────────────────
+        seedUserComics(reader.getId());
+
+        log.debug("Mock seed data loaded: {} comics, {} collections, 3 users",
                 comicRepository.count(), collectionRepository.count());
+    }
+
+    private void seedUserComics(String readerId) {
+        String[] titlesToOwn = { "Batman", "The Amazing Spider-Man", "X-Men", "The Avengers" };
+        for (String title : titlesToOwn) {
+            List<Comic> issues = comicRepository.findByTitle(title);
+            for (int i = 0; i < Math.min(2, issues.size()); i++) {
+                Comic comic = issues.get(i);
+                if (!userComicRepository.existsByUserIdAndComicId(readerId, comic.getId())) {
+                    UserComic uc = new UserComic();
+                    uc.setUserId(readerId);
+                    uc.setComicId(comic.getId());
+                    uc.setUnits(1);
+                    uc.setAddedAt(java.time.LocalDateTime.now());
+                    userComicRepository.save(uc);
+                }
+            }
+        }
+    }
+
+    private Collection collection(String name, String publisher, boolean ongoing,
+                                  boolean wantToComplete, String description) {
+        Collection c = new Collection(name, publisher, ongoing, wantToComplete);
+        c.setDescription(description);
+        return c;
     }
 
     private Comic comic(String title, int number, String publisher, double price,
@@ -175,6 +220,12 @@ public class MockDataInitializer implements ApplicationRunner {
         c.setDescription(description);
         c.setStock(10);
         c.setPublishedDate(publishedDate);
+        // Issues divisible by 3 stay without cover to exercise the frontend placeholder.
+        if (number % 3 != 0) {
+            String seed = title.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-" + number;
+            c.setImageUrl("https://picsum.photos/seed/" + seed + "/300/450");
+        }
+        c.setOwned(number % 2 == 1);
         return c;
     }
 }

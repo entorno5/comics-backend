@@ -42,5 +42,8 @@ public class CreateComicDTO {
     @Min(value = 0, message = "Stock cannot be negative")
     private int stock;
 
+    @Size(max = 500, message = "Image URL cannot exceed 500 characters")
+    private String imageUrl;
+
     private LocalDate publishedDate;
 }

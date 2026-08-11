@@ -6,6 +6,7 @@ import com.comics.backend.exceptions.DuplicateResourceException;
 import com.comics.backend.exceptions.ResourceNotFoundException;
 import com.comics.backend.models.Comic;
 import com.comics.backend.mappers.EntityMapper;
+import com.comics.backend.repository.CollectionRepository;
 import com.comics.backend.repository.ComicRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,11 +39,14 @@ class ComicServiceTest {
     private ComicRepository comicRepository;
 
     @Mock
+    private CollectionRepository collectionRepository;
+
+    @Mock
     private EntityMapper entityMapper;
 
     @BeforeEach
     void beforeEach() {
-        comicService = new ComicService(comicRepository, entityMapper);
+        comicService = new ComicService(comicRepository, collectionRepository, entityMapper);
     }
 
     @Nested
@@ -399,6 +403,110 @@ class ComicServiceTest {
 
             assertThat(result).isNotNull();
             verify(comicRepository, times(1)).save(any(Comic.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("Get Owned Comics Tests")
+    class GetOwnedComicsTests {
+
+        private final Pageable pageable = PageRequest.of(0, 20);
+
+        @Test
+        @DisplayName("When ownedOnly without filter, expect owned repository query used")
+        void when_owned_only_without_filter_expect_owned_query() {
+            when(comicRepository.findByOwnedTrue(pageable)).thenReturn(new PageImpl<>(List.of()));
+
+            comicService.getAllComics(pageable, null, true);
+
+            verify(comicRepository).findByOwnedTrue(pageable);
+            verify(comicRepository, never()).findAll(any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("When ownedOnly with filter, expect owned search query used")
+        void when_owned_only_with_filter_expect_owned_search_query() {
+            when(comicRepository.findByTitleContainsIgnoreCaseAndOwnedTruePaged("bat", pageable))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            comicService.getAllComics(pageable, "bat", true);
+
+            verify(comicRepository).findByTitleContainsIgnoreCaseAndOwnedTruePaged("bat", pageable);
+        }
+
+        @Test
+        @DisplayName("When not ownedOnly, expect unfiltered behaviour unchanged")
+        void when_not_owned_only_expect_unfiltered_behaviour() {
+            when(comicRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of()));
+
+            comicService.getAllComics(pageable, null, false);
+
+            verify(comicRepository).findAll(pageable);
+            verify(comicRepository, never()).findByOwnedTrue(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Toggle Owned Tests")
+    class ToggleOwnedTests {
+
+        private Comic comicWithOwned(Boolean owned) {
+            Comic comic = new Comic("Spider-Man", 1, "Marvel", 3.99);
+            comic.setId("123");
+            comic.setOwned(owned);
+            return comic;
+        }
+
+        @Test
+        @DisplayName("When owned is true, expect toggled to false")
+        void when_owned_true_expect_toggled_to_false() {
+            Comic comic = comicWithOwned(true);
+            when(comicRepository.findById("123")).thenReturn(Optional.of(comic));
+            when(comicRepository.save(any(Comic.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(entityMapper.toComicResponseDTO(any())).thenReturn(new ComicResponseDTO());
+
+            comicService.toggleOwned("123");
+
+            assertThat(comic.getOwned()).isFalse();
+            verify(comicRepository, times(1)).save(comic);
+        }
+
+        @Test
+        @DisplayName("When owned is false, expect toggled to true")
+        void when_owned_false_expect_toggled_to_true() {
+            Comic comic = comicWithOwned(false);
+            when(comicRepository.findById("123")).thenReturn(Optional.of(comic));
+            when(comicRepository.save(any(Comic.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(entityMapper.toComicResponseDTO(any())).thenReturn(new ComicResponseDTO());
+
+            comicService.toggleOwned("123");
+
+            assertThat(comic.getOwned()).isTrue();
+        }
+
+        @Test
+        @DisplayName("When owned is null, expect toggled to true")
+        void when_owned_null_expect_toggled_to_true() {
+            Comic comic = comicWithOwned(null);
+            when(comicRepository.findById("123")).thenReturn(Optional.of(comic));
+            when(comicRepository.save(any(Comic.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(entityMapper.toComicResponseDTO(any())).thenReturn(new ComicResponseDTO());
+
+            comicService.toggleOwned("123");
+
+            assertThat(comic.getOwned()).isTrue();
+        }
+
+        @Test
+        @DisplayName("When comic not found, expect ResourceNotFoundException")
+        void when_comic_not_found_expect_resource_not_found_exception() {
+            when(comicRepository.findById("missing")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> comicService.toggleOwned("missing"))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("missing");
+
+            verify(comicRepository, never()).save(any());
         }
     }
 }

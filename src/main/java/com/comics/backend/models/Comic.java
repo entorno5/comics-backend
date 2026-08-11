@@ -44,6 +44,12 @@ public class Comic {
 
     private int stock = 0;
 
+    /** Cover image URL; null = no image yet (frontend shows a default placeholder). */
+    private String imageUrl;
+
+    /** True if the collector already owns this issue. Null is treated as false. */
+    private Boolean owned;
+
     /** Publication date — used to sort comics from most recent to oldest. */
     private LocalDate publishedDate;
 

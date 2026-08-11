@@ -69,6 +69,7 @@ public class EntityMapper {
         comic.setPrice(dto.getPrice());
         comic.setDescription(dto.getDescription());
         comic.setStock(dto.getStock());
+        comic.setImageUrl(dto.getImageUrl());
         comic.setPublishedDate(dto.getPublishedDate());
         return comic;
     }
@@ -90,6 +91,8 @@ public class EntityMapper {
                 .price(comic.getPrice())
                 .description(comic.getDescription())
                 .stock(comic.getStock())
+                .imageUrl(comic.getImageUrl())
+                .owned(comic.getOwned())
                 .active(comic.getActive())
                 .publishedDate(comic.getPublishedDate())
                 .createdAt(comic.getCreatedAt())
@@ -98,20 +101,22 @@ public class EntityMapper {
     }
 
     /**
-     * Convert Collection entity to CollectionResponseDTO with computed issue count.
+     * Convert Collection entity to CollectionResponseDTO with computed issue counts.
      */
-    public CollectionResponseDTO toCollectionResponseDTO(Collection collection, long issueCount) {
+    public CollectionResponseDTO toCollectionResponseDTO(Collection collection, long issueCount, long ownedCount) {
         if (collection == null) {
             return null;
         }
-        
+
         return CollectionResponseDTO.builder()
                 .id(collection.getId())
                 .name(collection.getName())
                 .publisher(collection.getPublisher())
+                .description(collection.getDescription())
                 .ongoingCollection(collection.getOngoingCollection())
                 .wantToComplete(collection.getWantToComplete())
                 .issueCount(issueCount)
+                .ownedCount(ownedCount)
                 .createdAt(collection.getCreatedAt())
                 .updatedAt(collection.getUpdatedAt())
                 .build();

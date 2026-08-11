@@ -18,11 +18,14 @@ public class ComicResponseDTO {
     private String id;
     private String title;
     private String collectionName;
+    private String collectionId;
     private int number;
     private String publisher;
     private double price;
     private String description;
     private int stock;
+    private String imageUrl;
+    private Boolean owned;
     private Boolean active;
     private LocalDate publishedDate;
     private LocalDateTime createdAt;
