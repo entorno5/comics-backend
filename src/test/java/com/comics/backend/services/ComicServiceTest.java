@@ -8,6 +8,7 @@ import com.comics.backend.models.Comic;
 import com.comics.backend.mappers.EntityMapper;
 import com.comics.backend.repository.CollectionRepository;
 import com.comics.backend.repository.ComicRepository;
+import com.comics.backend.repository.UserComicRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,11 +43,14 @@ class ComicServiceTest {
     private CollectionRepository collectionRepository;
 
     @Mock
+    private UserComicRepository userComicRepository;
+
+    @Mock
     private EntityMapper entityMapper;
 
     @BeforeEach
     void beforeEach() {
-        comicService = new ComicService(comicRepository, collectionRepository, entityMapper);
+        comicService = new ComicService(comicRepository, collectionRepository, userComicRepository, entityMapper);
     }
 
     @Nested
@@ -131,10 +135,13 @@ class ComicServiceTest {
             dto.setNumber(1);
             dto.setPublisher("Marvel");
             dto.setPrice(3.99);
+            dto.setCollectionName("Spider-Man");
             
             Comic comic = new Comic("Spider-Man", 1, "Marvel", 3.99);
             ComicResponseDTO responseDTO = new ComicResponseDTO();
             
+            when(collectionRepository.findByName("Spider-Man"))
+                    .thenReturn(Optional.of(new com.comics.backend.models.Collection("Spider-Man", "Marvel", true, false)));
             when(comicRepository.findByTitleAndNumber("Spider-Man", 1)).thenReturn(Optional.empty());
             when(entityMapper.toComicEntity(dto)).thenReturn(comic);
             when(comicRepository.save(any(Comic.class))).thenReturn(comic);
@@ -154,14 +161,32 @@ class ComicServiceTest {
             dto.setNumber(1);
             dto.setPublisher("Marvel");
             dto.setPrice(3.99);
+            dto.setCollectionName("Spider-Man");
             
             Comic existingComic = new Comic("Spider-Man", 1, "Marvel", 3.99);
+            when(collectionRepository.findByName("Spider-Man"))
+                    .thenReturn(Optional.of(new com.comics.backend.models.Collection("Spider-Man", "Marvel", true, false)));
             when(comicRepository.findByTitleAndNumber("Spider-Man", 1))
                     .thenReturn(Optional.of(existingComic));
 
             assertThatThrownBy(() -> comicService.createComic(dto))
                     .isInstanceOf(DuplicateResourceException.class);
             
+            verify(comicRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("When collection does not exist, expect comic creation rejected")
+        void when_collection_does_not_exist_expect_exception() {
+            CreateComicDTO dto = new CreateComicDTO();
+            dto.setTitle("Spider-Man");
+            dto.setNumber(1);
+            dto.setCollectionName("Missing collection");
+            when(collectionRepository.findByName("Missing collection")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> comicService.createComic(dto))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
             verify(comicRepository, never()).save(any());
         }
 
@@ -308,10 +333,13 @@ class ComicServiceTest {
             updateDTO.setNumber(2);
             updateDTO.setPublisher("Marvel");
             updateDTO.setPrice(4.99);
+            updateDTO.setCollectionName("Spider-Man");
             
             ComicResponseDTO responseDTO = new ComicResponseDTO();
             
             when(comicRepository.findById(id)).thenReturn(Optional.of(existingComic));
+            when(collectionRepository.findByName("Spider-Man"))
+                    .thenReturn(Optional.of(new com.comics.backend.models.Collection("Spider-Man", "Marvel", true, false)));
             when(comicRepository.findByTitleAndNumber("Spider-Man 2", 2))
                     .thenReturn(Optional.empty());
             when(comicRepository.save(any(Comic.class))).thenReturn(existingComic);
@@ -321,6 +349,31 @@ class ComicServiceTest {
 
             assertThat(result).isNotNull();
             verify(comicRepository, times(1)).save(any(Comic.class));
+        }
+
+        @Test
+        @DisplayName("When updated number duplicates another comic, expect exception thrown")
+        void when_updated_number_duplicates_comic_expect_exception() {
+            String id = "123";
+            Comic existingComic = new Comic("Spider-Man", 1, "Marvel", 3.99);
+            existingComic.setId(id);
+            Comic duplicate = new Comic("Spider-Man", 2, "Marvel", 3.99);
+            duplicate.setId("456");
+
+            CreateComicDTO updateDTO = new CreateComicDTO();
+            updateDTO.setTitle("Spider-Man");
+            updateDTO.setNumber(2);
+            updateDTO.setCollectionName("Spider-Man");
+
+            when(comicRepository.findById(id)).thenReturn(Optional.of(existingComic));
+            when(collectionRepository.findByName("Spider-Man"))
+                    .thenReturn(Optional.of(new com.comics.backend.models.Collection("Spider-Man", "Marvel", true, false)));
+            when(comicRepository.findByTitleAndNumber("Spider-Man", 2)).thenReturn(Optional.of(duplicate));
+
+            assertThatThrownBy(() -> comicService.updateComic(id, updateDTO))
+                    .isInstanceOf(DuplicateResourceException.class);
+
+            verify(comicRepository, never()).save(any());
         }
 
         @Test
@@ -345,6 +398,7 @@ class ComicServiceTest {
 
             comicService.deleteComic(id);
 
+            verify(userComicRepository).deleteByComicId(id);
             verify(comicRepository, times(1)).deleteById(id);
         }
 
@@ -510,4 +564,3 @@ class ComicServiceTest {
         }
     }
 }
-

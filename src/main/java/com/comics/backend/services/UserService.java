@@ -7,6 +7,7 @@ import com.comics.backend.exceptions.ResourceNotFoundException;
 import com.comics.backend.mappers.EntityMapper;
 import com.comics.backend.models.User;
 import com.comics.backend.repository.UserRepository;
+import com.comics.backend.repository.UserComicRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserComicRepository userComicRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntityMapper entityMapper;
 
@@ -39,6 +41,10 @@ public class UserService {
         log.debug("Fetching all users with pagination: {}", pageable);
         return userRepository.findAll(pageable)
                 .map(entityMapper::toUserResponseDTO);
+    }
+
+    public long countUsers() {
+        return userRepository.count();
     }
 
     /**
@@ -190,6 +196,7 @@ public class UserService {
             throw new ResourceNotFoundException("User", id);
         }
         
+        userComicRepository.deleteByUserId(id);
         userRepository.deleteById(id);
         log.info("User deleted successfully with ID: {}", id);
     }

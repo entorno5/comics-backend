@@ -55,6 +55,8 @@ public class DevSecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/comics/*/owned").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/collections/*/want-to-complete").authenticated()
                         // Catalog maintenance (create/update/delete): ADMIN only
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/count").authenticated()
+                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/comics/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/comics/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/comics/**").hasRole("ADMIN")

@@ -35,6 +35,12 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/count")
+    @Operation(summary = "Get total user count", description = "Returns only the total number of registered users")
+    public ResponseEntity<Long> getUserCount() {
+        return ResponseEntity.ok(userService.countUsers());
+    }
+
     /**
      * Get all users with pagination
      */

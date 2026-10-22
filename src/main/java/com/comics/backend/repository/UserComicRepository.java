@@ -15,4 +15,8 @@ public interface UserComicRepository extends MongoRepository<UserComic, String> 
     boolean existsByUserIdAndComicId(String userId, String comicId);
 
     void deleteByUserIdAndComicId(String userId, String comicId);
+
+    void deleteByUserId(String userId);
+
+    void deleteByComicId(String comicId);
 }

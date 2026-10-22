@@ -99,6 +99,18 @@ public class InMemoryUserComicRepository implements UserComicRepository {
     }
 
     @Override
+    public void deleteByUserId(String userId) {
+        store.values().removeIf(uc -> userId.equals(uc.getUserId()));
+        persist();
+    }
+
+    @Override
+    public void deleteByComicId(String comicId) {
+        store.values().removeIf(uc -> comicId.equals(uc.getComicId()));
+        persist();
+    }
+
+    @Override
     public <S extends UserComic> S save(S entity) {
         if (entity.getId() == null) {
             entity.setId(nextId());

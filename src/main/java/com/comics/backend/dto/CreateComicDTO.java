@@ -21,6 +21,7 @@ public class CreateComicDTO {
     @Size(min = 2, max = 200, message = "Title must be between 2 and 200 characters")
     private String title;
 
+    @NotBlank(message = "Collection name is required")
     @Size(max = 200, message = "Collection name cannot exceed 200 characters")
     private String collectionName;
 

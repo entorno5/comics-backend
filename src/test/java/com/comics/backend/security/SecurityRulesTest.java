@@ -59,6 +59,45 @@ class SecurityRulesTest {
         mockMvc.perform(get("/api/v1/collections")).andExpect(status().is4xxClientError());
     }
 
+    @Test
+    @DisplayName("When USER gets user count, expect 200")
+    @WithMockUser(roles = "USER")
+    void when_user_gets_user_count_expect_200() throws Exception {
+        mockMvc.perform(get("/api/v1/users/count")).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("When USER lists users, expect 403")
+    @WithMockUser(roles = "USER")
+    void when_user_lists_users_expect_403() throws Exception {
+        mockMvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("When USER reads user details, expect 403")
+    @WithMockUser(roles = "USER")
+    void when_user_reads_user_details_expect_403() throws Exception {
+        mockMvc.perform(get("/api/v1/users/{id}", "any-user"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("When USER creates a user, expect 403")
+    @WithMockUser(roles = "USER")
+    void when_user_creates_user_expect_403() throws Exception {
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nickname\":\"blocked\",\"mail\":\"blocked@example.com\",\"password\":\"password\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("When ADMIN lists users, expect 200")
+    @WithMockUser(roles = "ADMIN")
+    void when_admin_lists_users_expect_200() throws Exception {
+        mockMvc.perform(get("/api/v1/users")).andExpect(status().isOk());
+    }
+
     // ── Toggles de usuario: cualquier usuario autenticado ──────────────────
 
     @Test

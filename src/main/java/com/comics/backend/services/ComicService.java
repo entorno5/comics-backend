@@ -8,6 +8,7 @@ import com.comics.backend.mappers.EntityMapper;
 import com.comics.backend.models.Comic;
 import com.comics.backend.repository.ComicRepository;
 import com.comics.backend.repository.CollectionRepository;
+import com.comics.backend.repository.UserComicRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,7 @@ public class ComicService {
 
     private final ComicRepository comicRepository;
     private final CollectionRepository collectionRepository;
+    private final UserComicRepository userComicRepository;
     private final EntityMapper entityMapper;
 
     /**
@@ -92,6 +94,8 @@ public class ComicService {
             throw new IllegalArgumentException("Comic title cannot be blank");
         }
 
+        String collectionName = validateCollection(createComicDTO.getCollectionName());
+
         // Check if comic with same title and number already exists
         if (comicRepository.findByTitleAndNumber(createComicDTO.getTitle(), createComicDTO.getNumber()).isPresent()) {
             log.warn("Comic with title '{}' and number {} already exists", createComicDTO.getTitle(), createComicDTO.getNumber());
@@ -100,6 +104,7 @@ public class ComicService {
 
         // Create comic from DTO
         Comic comic = entityMapper.toComicEntity(createComicDTO);
+        comic.setCollectionName(collectionName);
 
         // Save comic
         Comic savedComic = comicRepository.save(comic);
@@ -175,18 +180,30 @@ public class ComicService {
         
         Comic comic = comicRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comic", id));
-        
+
+        String title = StringUtils.isNotBlank(updateDTO.getTitle())
+                ? updateDTO.getTitle().trim()
+                : comic.getTitle();
+        int number = updateDTO.getNumber() > 0 ? updateDTO.getNumber() : comic.getNumber();
+        String collectionName = validateCollection(
+                StringUtils.isNotBlank(updateDTO.getCollectionName())
+                        ? updateDTO.getCollectionName()
+                        : comic.getCollectionName());
+
+        comicRepository.findByTitleAndNumber(title, number)
+                .filter(existing -> !id.equals(existing.getId()))
+                .ifPresent(existing -> {
+                    throw new DuplicateResourceException(
+                            String.format("Comic with title '%s' and number %d already exists", title, number));
+                });
+
         // Update fields if provided
-        if (StringUtils.isNotBlank(updateDTO.getTitle()) && !updateDTO.getTitle().equals(comic.getTitle())) {
-            // Check for duplicate title and number combination
-            if (comicRepository.findByTitleAndNumber(updateDTO.getTitle(), updateDTO.getNumber()).isPresent()) {
-                throw new DuplicateResourceException(String.format("Comic with title '%s' and number %d already exists", updateDTO.getTitle(), updateDTO.getNumber()));
-            }
-            comic.setTitle(updateDTO.getTitle());
+        if (StringUtils.isNotBlank(updateDTO.getTitle())) {
+            comic.setTitle(title);
         }
         
         if (updateDTO.getNumber() > 0) {
-            comic.setNumber(updateDTO.getNumber());
+            comic.setNumber(number);
         }
         
         if (StringUtils.isNotBlank(updateDTO.getPublisher())) {
@@ -205,9 +222,7 @@ public class ComicService {
             comic.setStock(updateDTO.getStock());
         }
 
-        if (StringUtils.isNotBlank(updateDTO.getCollectionName())) {
-            comic.setCollectionName(updateDTO.getCollectionName());
-        }
+        comic.setCollectionName(collectionName);
 
         if (updateDTO.getPublishedDate() != null) {
             comic.setPublishedDate(updateDTO.getPublishedDate());
@@ -238,8 +253,21 @@ public class ComicService {
             throw new ResourceNotFoundException("Comic", id);
         }
         
+        userComicRepository.deleteByComicId(id);
         comicRepository.deleteById(id);
         log.info("Comic deleted successfully with ID: {}", id);
+    }
+
+    private String validateCollection(String collectionName) {
+        if (StringUtils.isBlank(collectionName)) {
+            throw new IllegalArgumentException("Comic collection cannot be blank");
+        }
+
+        String normalizedName = collectionName.trim();
+        if (collectionRepository.findByName(normalizedName).isEmpty()) {
+            throw new ResourceNotFoundException("Collection", normalizedName);
+        }
+        return normalizedName;
     }
 
     /**
@@ -299,4 +327,3 @@ public class ComicService {
         return entityMapper.toComicResponseDTO(updatedComic);
     }
 }
-
